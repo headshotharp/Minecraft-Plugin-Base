@@ -21,6 +21,7 @@ package de.headshotharp.plugin.base.command;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,10 +47,10 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
     private T plugin;
     private Map<Class<?>, Object> injectables = new HashMap<>();
 
-    public CommandRegistry(T plugin, Class<T> clazz, Object... injectableInstances)
+    public CommandRegistry(T plugin, Class<T> pluginClass, Object... injectableInstances)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         this.plugin = plugin;
-        injectables.put(clazz, plugin);
+        injectables.put(pluginClass, plugin);
         for (Object injectableInstance : injectableInstances) {
             injectables.put(injectableInstance.getClass(), injectableInstance);
         }
@@ -60,26 +61,28 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         Set<Class<? extends ExecutableCommand<T>>> commandClasses = findClasses(packageName);
         for (Class<? extends ExecutableCommand<T>> clazz : commandClasses) {
-            if (clazz.getDeclaredConstructors().length != 1) {
-                throw new IllegalStateException("The class " + clazz.getSimpleName()
-                        + " must have exactly one constructor for auto-instantiation");
-            }
-            @SuppressWarnings("unchecked") // this is safe as clazz is Class<? extends ExecutableCommand<T>>
-            Constructor<ExecutableCommand<T>> constructor = (Constructor<ExecutableCommand<T>>) clazz
-                    .getDeclaredConstructors()[0];
-            Object[] params = new Object[constructor.getParameterCount()];
-            for (int i = 0; i < params.length; i++) {
-                Class<?> paramType = constructor.getParameterTypes()[i];
-                Object instance = injectables.get(paramType);
-                if (instance != null) {
-                    params[i] = paramType.cast(instance);
-                } else {
+            if (!Modifier.isAbstract(clazz.getModifiers())) {
+                if (clazz.getDeclaredConstructors().length != 1) {
                     throw new IllegalStateException("The class " + clazz.getSimpleName()
-                            + " has an invalid constructor param type: " + paramType.getSimpleName());
+                            + " must have exactly one constructor for auto-instantiation");
                 }
+                @SuppressWarnings("unchecked") // this is safe as clazz is Class<? extends ExecutableCommand<T>>
+                Constructor<ExecutableCommand<T>> constructor = (Constructor<ExecutableCommand<T>>) clazz
+                        .getDeclaredConstructors()[0];
+                Object[] params = new Object[constructor.getParameterCount()];
+                for (int i = 0; i < params.length; i++) {
+                    Class<?> paramType = constructor.getParameterTypes()[i];
+                    Object instance = injectables.get(paramType);
+                    if (instance != null) {
+                        params[i] = paramType.cast(instance);
+                    } else {
+                        throw new IllegalStateException("The class " + clazz.getSimpleName()
+                                + " has an invalid constructor param type: " + paramType.getSimpleName());
+                    }
+                }
+                ExecutableCommand<T> command = constructor.newInstance(params);
+                commands.add(command);
             }
-            ExecutableCommand<T> command = constructor.newInstance(params);
-            commands.add(command);
         }
         String allCommands = String.join(", ", commands.stream().map(ExecutableCommand::getName).toList());
         if (plugin.getLogger().isLoggable(Level.INFO)) {

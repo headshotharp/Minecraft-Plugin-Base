@@ -49,4 +49,8 @@ public class ConfigService<T> {
         configFile.getParentFile().mkdirs();
         mapper.writeValue(configFile, config);
     }
+
+    public File getConfigFile() {
+        return configFile;
+    }
 }
