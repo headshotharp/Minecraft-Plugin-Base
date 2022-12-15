@@ -10,7 +10,7 @@ pipeline {
     MAVEN_PROJECT_NAME = sh(script: "mvn -q -Dexec.executable=echo -Dexec.args='\${project.name}' --non-recursive exec:exec", returnStdout: true).trim()
   }
   stages {
-    stage('compile') {
+    stage('deploy') {
       steps {
         sh 'mvn clean deploy --no-transfer-progress'
       }
