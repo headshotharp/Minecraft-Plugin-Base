@@ -23,28 +23,66 @@ import java.util.logging.Level;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * Simple {@link org.bukkit.plugin.java.JavaPlugin JavaPlugin} extension to
+ * provide easy logging methods.
+ *
+ */
 public class LoggablePlugin extends JavaPlugin {
 
-    public void info(String msg, Throwable t) {
-        getLogger().log(Level.INFO, msg, t);
-    }
-
+    /**
+     * Log info
+     *
+     * @param msg Text to log
+     */
     public void info(String msg) {
         getLogger().log(Level.INFO, msg);
     }
 
+    /**
+     * Log info
+     *
+     * @param msg Text to log
+     * @param t   Exception to log
+     */
+    public void info(String msg, Throwable t) {
+        getLogger().log(Level.INFO, msg, t);
+    }
+
+    /**
+     * Log warning
+     *
+     * @param msg Text to log
+     */
     public void warn(String msg) {
         getLogger().log(Level.WARNING, msg);
     }
 
+    /**
+     * Log warning
+     *
+     * @param msg Text to log
+     * @param t   Exception to log
+     */
     public void warn(String msg, Throwable t) {
         getLogger().log(Level.WARNING, msg, t);
     }
 
+    /**
+     * Log error
+     *
+     * @param msg Text to log
+     */
     public void error(String msg) {
         getLogger().log(Level.SEVERE, msg);
     }
 
+    /**
+     * Log error
+     *
+     * @param msg Text to log
+     * @param t   Exception to log
+     */
     public void error(String msg, Throwable t) {
         getLogger().log(Level.SEVERE, msg, t);
     }

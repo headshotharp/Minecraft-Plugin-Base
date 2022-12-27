@@ -23,29 +23,69 @@ import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * Abstract class to create bukkit commands for the
+ * {@link de.headshotharp.plugin.base.command.CommandRegistry CommandRegistry}.
+ *
+ * @param <T> Base class for implementing JavaPlugin
+ */
 public abstract class ExecutableCommand<T extends JavaPlugin>
         implements CommandRunnable, CommandApplicable, CommandTabCompletable {
 
     private T plugin;
 
+    /**
+     * Create command
+     *
+     * @param plugin the base plugin
+     */
     protected ExecutableCommand(T plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Get current plugin instance
+     *
+     * @return current plugin instance
+     */
     public T getPlugin() {
         return plugin;
     }
 
+    /**
+     * Wrapper to get {@link org.bukkit.Server Server} of the current plugin
+     * instance
+     *
+     * @return server of the current plugin
+     */
     public Server getServer() {
         return plugin.getServer();
     }
 
+    /**
+     * Return true if the command is for players only
+     *
+     * @return true if players only
+     */
     public abstract boolean isForPlayerOnly();
 
+    /**
+     * Get the command usage as string
+     *
+     * @return command usage as string
+     */
     public abstract String usage();
 
+    /**
+     * Get the name of the command
+     *
+     * @return name of the command
+     */
     public abstract String getName();
 
+    /**
+     * Return true if the command is applicable
+     */
     @Override
     public boolean isApplicable(CommandSender sender, String command, String... args) {
         return command.equalsIgnoreCase(getName());

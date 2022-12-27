@@ -40,6 +40,12 @@ import org.reflections.Reflections;
 
 import de.headshotharp.plugin.base.command.generic.ExecutableCommand;
 
+/**
+ * Base class to register bukkit commands on
+ *
+ * @param <T> Base class of the implementing
+ *            {@link org.bukkit.plugin.java.JavaPlugin JavaPlugin}
+ */
 public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, TabCompleter {
 
     private List<ExecutableCommand<T>> commands = new LinkedList<>();
@@ -47,6 +53,22 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
     private T plugin;
     private Map<Class<?>, Object> injectables = new HashMap<>();
 
+    /**
+     * Creates a command registry and scans classpath for bukkit commands
+     * implementing
+     * {@link de.headshotharp.plugin.base.command.generic.ExecutableCommand
+     * ExecutableCommand}. If those commands require any other objects to be created
+     * in their constructor, those are injected on the fly, but must be given here
+     * as injectable instances.
+     *
+     * @param plugin              base plugin implementation
+     * @param pluginClass         class of the plugin implementation
+     * @param injectableInstances all additional instances of objects that may be
+     *                            later injected into command constructors
+     * @throws InstantiationException    throw if the command cannot be intatiated
+     * @throws IllegalAccessException    thrown if the constructor is not accessible
+     * @throws InvocationTargetException thrown if the constructor cannot be invoked
+     */
     public CommandRegistry(T plugin, Class<T> pluginClass, Object... injectableInstances)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         this.plugin = plugin;
@@ -96,10 +118,18 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
                 .filter(c -> !Modifier.isAbstract(c.getModifiers())).collect(Collectors.toSet());
     }
 
+    /**
+     * Get all registered commands
+     *
+     * @return List of registered commands
+     */
     public List<ExecutableCommand<T>> getCommands() {
         return commands;
     }
 
+    /**
+     * Base function to delegate commands to registered commands
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command bukkitCommand, String label, String[] originalArgs) {
         if (originalArgs.length > 0) {
@@ -119,6 +149,9 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
         return false;
     }
 
+    /**
+     * Base function to delegate tab completion to registered commands
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command bukkitCommand, String alias,
             String[] originalArgs) {

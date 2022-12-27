@@ -23,8 +23,19 @@ import java.util.List;
 
 import org.bukkit.command.CommandSender;
 
+/**
+ * Functional interface to complete tab requests
+ */
 @FunctionalInterface
 public interface CommandTabCompletable {
 
+    /**
+     * Function to execute on tab completion
+     *
+     * @param sender  command sender
+     * @param command given command
+     * @param args    arguemnts to given command
+     * @return returns a list of tab completions
+     */
     public List<String> onTabComplete(CommandSender sender, String command, String... args);
 }

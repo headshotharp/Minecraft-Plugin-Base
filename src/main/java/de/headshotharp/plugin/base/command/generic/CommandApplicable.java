@@ -21,8 +21,20 @@ package de.headshotharp.plugin.base.command.generic;
 
 import org.bukkit.command.CommandSender;
 
+/**
+ * Functional interface to check if a command is applicable to its
+ * implementation
+ */
 @FunctionalInterface
 public interface CommandApplicable {
 
+    /**
+     * Function to check if a command applies
+     *
+     * @param sender  the command sender
+     * @param command the base command
+     * @param args    the arguments to the given command
+     * @return true if the command applies
+     */
     public boolean isApplicable(CommandSender sender, String command, String... args);
 }

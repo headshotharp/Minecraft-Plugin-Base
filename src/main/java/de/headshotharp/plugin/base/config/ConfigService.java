@@ -26,30 +26,71 @@ import java.nio.file.Paths;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+/**
+ * Simple service class to save and load config files in YAML/YML format. Simple
+ * POJO class must be given as configuration class.
+ *
+ *
+ * @param <T> Configuration class
+ */
 public class ConfigService<T> {
 
     private final ObjectMapper mapper = new YAMLMapper();
     private final Class<T> configClass;
     private final File configFile;
 
+    /**
+     * Creates a config service for the given config class. Uses the plugin name to
+     * create default configuration path: <code>plugins/{name}/config.yml</code>.
+     *
+     * @param configClass the configuration class
+     * @param pluginName  name of the plugin to create config file path
+     */
     public ConfigService(Class<T> configClass, String pluginName) {
         this(configClass, Paths.get("plugins", pluginName, "config.yml").toFile());
     }
 
+    /**
+     * Creates a config service for the given config class and given file. The file
+     * is relative to the papermc root folder. It is advised to create a folder per
+     * plugin inside the servers plugins folder.<br />
+     * Example:
+     * <code>Paths.get("plugins", pluginName, "my-config-file.yml").toFile()</code>
+     *
+     * @param configClass the configuration class
+     * @param configFile  the configuration file path
+     */
     public ConfigService(Class<T> configClass, File configFile) {
         this.configClass = configClass;
         this.configFile = configFile;
     }
 
+    /**
+     * Read config from disk.
+     *
+     * @return loaded config file as pojo
+     * @throws IOException may throw IOException
+     */
     public T readConfig() throws IOException {
         return mapper.readValue(configFile, configClass);
     }
 
+    /**
+     * Save given config to disk.
+     *
+     * @param config the config pojo to save
+     * @throws IOException may throw IOException
+     */
     public void saveConfig(T config) throws IOException {
         configFile.getParentFile().mkdirs();
         mapper.writeValue(configFile, config);
     }
 
+    /**
+     * Get the given config file upon config service creation.
+     *
+     * @return current config file of this config service
+     */
     public File getConfigFile() {
         return configFile;
     }

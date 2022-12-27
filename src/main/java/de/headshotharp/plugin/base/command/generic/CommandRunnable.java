@@ -21,8 +21,18 @@ package de.headshotharp.plugin.base.command.generic;
 
 import org.bukkit.command.CommandSender;
 
+/**
+ * Functional interface to execute command
+ */
 @FunctionalInterface
 public interface CommandRunnable {
 
+    /**
+     * Function to execute command
+     *
+     * @param sender  command sender
+     * @param command command to execute
+     * @param args    arguemnts to given command
+     */
     public void execute(CommandSender sender, String command, String... args);
 }
