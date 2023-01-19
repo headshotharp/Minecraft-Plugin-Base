@@ -72,8 +72,9 @@ class CommandRegistryTest {
         }
 
         @Override
-        public void execute(CommandSender sender, String command, String... args) {
+        public boolean execute(CommandSender sender, String command, String... args) {
             getPlugin().someCustomMethod("[" + dataSource.loadServerName() + "] " + String.join(" ", args));
+            return true;
         }
 
         @Override

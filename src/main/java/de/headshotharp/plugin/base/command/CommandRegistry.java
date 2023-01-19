@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -70,6 +71,33 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
      * @throws InvocationTargetException thrown if the constructor cannot be invoked
      */
     public CommandRegistry(T plugin, Class<T> pluginClass, Object... injectableInstances)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        this.plugin = plugin;
+        injectables.put(pluginClass, plugin);
+        for (Object injectableInstance : injectableInstances) {
+            injectables.put(injectableInstance.getClass(), injectableInstance);
+        }
+        scanCommands(plugin.getClass().getPackageName());
+    }
+
+    /**
+     * Creates a command registry and scans classpath for bukkit commands
+     * implementing
+     * {@link de.headshotharp.plugin.base.command.generic.ExecutableCommand
+     * ExecutableCommand}. If those commands require any other objects to be created
+     * in their constructor, those are injected on the fly, but must be given here
+     * as injectable instances.
+     *
+     * @param plugin              base plugin implementation
+     * @param pluginClass         class of the plugin implementation
+     * @param basePackageName     base package to start discovering commands from
+     * @param injectableInstances all additional instances of objects that may be
+     *                            later injected into command constructors
+     * @throws InstantiationException    throw if the command cannot be intatiated
+     * @throws IllegalAccessException    thrown if the constructor is not accessible
+     * @throws InvocationTargetException thrown if the constructor cannot be invoked
+     */
+    public CommandRegistry(T plugin, Class<T> pluginClass, String basePackageName, Object... injectableInstances)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         this.plugin = plugin;
         injectables.put(pluginClass, plugin);
@@ -139,8 +167,8 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
                 if (command.isApplicable(sender, cmd, args)) {
                     if (command.isForPlayerOnly() && !(sender instanceof Player)) {
                         sender.sendMessage("The command is for players only");
-                    } else {
-                        command.execute(sender, cmd, args);
+                    } else if (!command.execute(sender, cmd, args)) {
+                        sender.sendMessage(ChatColor.DARK_RED + command.usage());
                     }
                     return true;
                 }

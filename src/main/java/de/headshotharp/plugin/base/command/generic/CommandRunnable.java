@@ -33,6 +33,7 @@ public interface CommandRunnable {
      * @param sender  command sender
      * @param command command to execute
      * @param args    arguemnts to given command
+     * @return true if command succeeded
      */
-    public void execute(CommandSender sender, String command, String... args);
+    public boolean execute(CommandSender sender, String command, String... args);
 }
