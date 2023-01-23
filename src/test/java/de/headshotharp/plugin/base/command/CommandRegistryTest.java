@@ -26,17 +26,14 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Logger;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.command.defaults.BukkitCommand;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import de.headshotharp.plugin.base.command.generic.ExecutableCommand;
+import de.headshotharp.plugin.base.command.testplugin.TestDataSource;
+import de.headshotharp.plugin.base.command.testplugin.TestPluginImpl;
 
 class CommandRegistryTest {
 
@@ -49,80 +46,19 @@ class CommandRegistryTest {
     void testCommandImplInstanciation()
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         // prepare objects
-        DataSource datasource = new DataSource();
+        TestDataSource datasource = new TestDataSource();
         // prepare mocks
         TestPluginImpl pluginMock = Mockito.mock(TestPluginImpl.class);
         Mockito.when(pluginMock.getLogger()).thenCallRealMethod();
         doCallRealMethod().when(pluginMock).someCustomMethod(anyString());
+        BukkitCommand bukkitCommand = Mockito.mock(BukkitCommand.class);
+        Mockito.when(bukkitCommand.getName()).thenReturn("test");
         // create registry
-        CommandRegistry<TestPluginImpl> registry = new CommandRegistry<>(pluginMock, TestPluginImpl.class, datasource);
+        CommandRegistry<TestPluginImpl> registry = new CommandRegistry<>("test", pluginMock, TestPluginImpl.class, true,
+                datasource);
         // execute command
-        registry.onCommand(null, null, null, new String[] { "test", "Hello", "World!" });
+        registry.onCommand(null, bukkitCommand, null, new String[] { "test", "Hello", "World!" });
         // check
         assertThat(pluginMock.msg, is(equalTo("[MC] Hello World!")));
-    }
-
-    public static class TestCommandImpl extends ExecutableCommand<TestPluginImpl> {
-
-        private DataSource dataSource;
-
-        protected TestCommandImpl(TestPluginImpl plugin, DataSource dataSource) {
-            super(plugin);
-            this.dataSource = dataSource;
-        }
-
-        @Override
-        public boolean execute(CommandSender sender, String command, String... args) {
-            getPlugin().someCustomMethod("[" + dataSource.loadServerName() + "] " + String.join(" ", args));
-            return true;
-        }
-
-        @Override
-        public List<String> onTabComplete(CommandSender sender, String command, String... args) {
-            return new LinkedList<>();
-        }
-
-        @Override
-        public boolean isForPlayerOnly() {
-            return false;
-        }
-
-        @Override
-        public String usage() {
-            return "/test <msg>";
-        }
-
-        @Override
-        public String getName() {
-            return "test";
-        }
-
-    }
-
-    public static class TestPluginImpl extends JavaPlugin {
-
-        public String msg = null;
-
-        public void someCustomMethod(String msg) {
-            this.msg = msg;
-            getLogger().info("TestPluginImpl: " + msg);
-        }
-
-        @Override
-        public Logger getLogger() {
-            return Logger.getLogger(TestPluginImpl.class.getName());
-        }
-    }
-
-    public static class DataSource {
-
-        public String loadServerName() {
-            return "MC";
-        }
-
-        @Override
-        public String toString() {
-            return "DataSource []";
-        }
     }
 }

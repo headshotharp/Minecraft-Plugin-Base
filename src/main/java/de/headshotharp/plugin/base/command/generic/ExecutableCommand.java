@@ -19,8 +19,14 @@
  */
 package de.headshotharp.plugin.base.command.generic;
 
+import java.util.List;
+
 import org.bukkit.Server;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -30,7 +36,8 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @param <T> Base class for implementing JavaPlugin
  */
 public abstract class ExecutableCommand<T extends JavaPlugin>
-        implements CommandRunnable, CommandApplicable, CommandTabCompletable {
+        implements CommandRunnable, CommandApplicable, CommandTabCompletable,
+        CommandExecutor, TabCompleter {
 
     private T plugin;
 
@@ -41,6 +48,15 @@ public abstract class ExecutableCommand<T extends JavaPlugin>
      */
     protected ExecutableCommand(T plugin) {
         this.plugin = plugin;
+    }
+
+    /**
+     * Register this command as executor and tab completer in this plugin
+     */
+    public void registerCommands() {
+        PluginCommand command = getPlugin().getCommand(getName());
+        command.setExecutor(this);
+        command.setTabCompleter(this);
     }
 
     /**
@@ -89,5 +105,21 @@ public abstract class ExecutableCommand<T extends JavaPlugin>
     @Override
     public boolean isApplicable(CommandSender sender, String command, String... args) {
         return command.equalsIgnoreCase(getName());
+    }
+
+    /**
+     * Base function to delegate commands to registered commands
+     */
+    @Override
+    public boolean onCommand(CommandSender sender, Command bukkitCommand, String label, String[] originalArgs) {
+        return execute(sender, bukkitCommand.getName(), originalArgs);
+    }
+
+    /**
+     * Base function to delegate tab completion to registered commands
+     */
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        return onTabComplete(sender, command.getName(), args);
     }
 }
