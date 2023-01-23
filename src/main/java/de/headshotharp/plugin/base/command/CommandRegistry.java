@@ -49,10 +49,9 @@ import de.headshotharp.plugin.base.command.generic.ExecutableCommand;
  */
 public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, TabCompleter {
 
-    private List<ExecutableCommand<T>> commands = new LinkedList<>();
-
     private T plugin;
     private Map<Class<?>, Object> injectables = new HashMap<>();
+    private List<ExecutableCommand<T>> commands = new LinkedList<>();
 
     /**
      * Creates a command registry and scans classpath for bukkit commands
@@ -66,18 +65,13 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
      * @param pluginClass         class of the plugin implementation
      * @param injectableInstances all additional instances of objects that may be
      *                            later injected into command constructors
-     * @throws InstantiationException    throw if the command cannot be intatiated
+     * @throws InstantiationException    thrown if the command cannot be intatiated
      * @throws IllegalAccessException    thrown if the constructor is not accessible
      * @throws InvocationTargetException thrown if the constructor cannot be invoked
      */
     public CommandRegistry(T plugin, Class<T> pluginClass, Object... injectableInstances)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        this.plugin = plugin;
-        injectables.put(pluginClass, plugin);
-        for (Object injectableInstance : injectableInstances) {
-            injectables.put(injectableInstance.getClass(), injectableInstance);
-        }
-        scanCommands(plugin.getClass().getPackageName());
+        this(plugin, pluginClass, pluginClass, injectableInstances);
     }
 
     /**
@@ -90,21 +84,45 @@ public class CommandRegistry<T extends JavaPlugin> implements CommandExecutor, T
      *
      * @param plugin              base plugin implementation
      * @param pluginClass         class of the plugin implementation
-     * @param basePackageName     base package to start discovering commands from
+     * @param commandBaseClass    any class inside the package to scan for commands
      * @param injectableInstances all additional instances of objects that may be
      *                            later injected into command constructors
-     * @throws InstantiationException    throw if the command cannot be intatiated
+     * @throws InstantiationException    thrown if the command cannot be intatiated
      * @throws IllegalAccessException    thrown if the constructor is not accessible
      * @throws InvocationTargetException thrown if the constructor cannot be invoked
      */
-    public CommandRegistry(T plugin, Class<T> pluginClass, String basePackageName, Object... injectableInstances)
+    public CommandRegistry(T plugin, Class<T> pluginClass, Class<T> commandBaseClass,
+            Object... injectableInstances)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        this(plugin, pluginClass, commandBaseClass.getPackageName(), injectableInstances);
+    }
+
+    /**
+     * Creates a command registry and scans classpath for bukkit commands
+     * implementing
+     * {@link de.headshotharp.plugin.base.command.generic.ExecutableCommand
+     * ExecutableCommand}. If those commands require any other objects to be created
+     * in their constructor, those are injected on the fly, but must be given here
+     * as injectable instances.
+     *
+     * @param plugin              base plugin implementation
+     * @param pluginClass         class of the plugin implementation
+     * @param basePackageName     the package to scan for commands
+     * @param injectableInstances all additional instances of objects that may be
+     *                            later injected into command constructors
+     * @throws InstantiationException    thrown if the command cannot be intatiated
+     * @throws IllegalAccessException    thrown if the constructor is not accessible
+     * @throws InvocationTargetException thrown if the constructor cannot be invoked
+     */
+    public CommandRegistry(T plugin, Class<T> pluginClass, String basePackageName,
+            Object... injectableInstances)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         this.plugin = plugin;
         injectables.put(pluginClass, plugin);
         for (Object injectableInstance : injectableInstances) {
             injectables.put(injectableInstance.getClass(), injectableInstance);
         }
-        scanCommands(plugin.getClass().getPackageName());
+        scanCommands(basePackageName);
     }
 
     private void scanCommands(String packageName)
