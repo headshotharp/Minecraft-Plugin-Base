@@ -133,7 +133,7 @@ public class CommandRegistry<T extends JavaPlugin> extends ExecutableCommand<T> 
      */
     @SafeVarargs
     public CommandRegistry(String name, T plugin, ExecutableCommand<T>... subcommands) {
-        this(name, plugin, Arrays.asList(subcommands));
+        this(name, plugin, new LinkedList<>(Arrays.asList(subcommands)));
     }
 
     /**
@@ -159,23 +159,36 @@ public class CommandRegistry<T extends JavaPlugin> extends ExecutableCommand<T> 
         return subcommands;
     }
 
+    /**
+     * Register given command in this registry
+     *
+     * @param command The command to add to registry
+     */
+    public void addCommand(ExecutableCommand<T> command) {
+        this.subcommands.add(command);
+    }
+
     @Override
     public boolean execute(CommandSender sender, String bukkitCommand, String... originalArgs) {
+        boolean showUsage = true;
         if (originalArgs.length > 0) {
             String cmd = originalArgs[0];
             String[] args = moveArgs(originalArgs);
             for (ExecutableCommand<T> command : subcommands) {
                 if (command.isApplicable(sender, cmd, args)) {
+                    showUsage = false;
                     if (command.isForPlayerOnly() && !(sender instanceof Player)) {
                         sender.sendMessage("The command is for players only");
                     } else if (!command.execute(sender, cmd, args)) {
                         sender.sendMessage(ChatColor.DARK_RED + command.usage());
                     }
-                    return true;
+                    break;
                 }
             }
         }
-        sender.sendMessage(ChatColor.YELLOW + usage());
+        if (showUsage) {
+            sender.sendMessage(ChatColor.YELLOW + usage());
+        }
         return true;
     }
 
@@ -203,7 +216,8 @@ public class CommandRegistry<T extends JavaPlugin> extends ExecutableCommand<T> 
 
     @Override
     public String usage() {
-        return "Available subcommands: " + String.join(", ", subcommands.stream().map(ExecutableCommand::getName).toList());
+        return "Available subcommands: "
+                + String.join(", ", subcommands.stream().map(ExecutableCommand::getName).toList());
     }
 
     @Override
